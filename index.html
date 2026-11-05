@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Hollow Manor</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <div id="wrap">
+    <div id="hud">
+      <div class="hud-l"><div id="stageName"></div><div id="hearts" aria-label="Sanity"></div></div>
+      <div id="inv"></div>
+      <div class="btns">
+        <button class="btn" id="bHint" type="button">Hint <kbd>H</kbd></button>
+        <button class="btn" id="bJournal" type="button">Journal <kbd>J</kbd></button>
+        <button class="btn" id="bMenu" type="button">Menu <kbd>Esc</kbd></button>
+      </div>
+    </div>
+    <div id="view">
+      <canvas id="c" width="1280" height="768" role="img" aria-label="Top-down view of a haunted manor"></canvas>
+      <div id="msg" aria-live="polite"></div>
+
+      <div class="screen on" id="title">
+        <div class="card">
+          <h1>The Hollow Manor</h1>
+          <p class="lede">You came to the Vane estate looking for a missing friend. At dusk the front door slammed shut and the bolt slid home. Something in the house knows you are here.</p>
+          <div class="keys">
+            <span><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></span><span>Walk (walk into doors to pass through)</span>
+            <span><kbd>E</kbd></span><span>Examine or use what is near you</span>
+            <span><kbd>H</kbd></span><span>Get a hint</span>
+            <span><kbd>J</kbd></span><span>Open your journal and notes</span>
+            <span><kbd>Esc</kbd></span><span>Pause, volume and options</span>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="bStart" type="button">New game</button>
+            <button class="btn" id="bContinue" type="button" hidden>Continue</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="screen" id="note"><div class="paperwrap"><div class="card paper">
+        <h2 id="noteT"></h2><div class="body" id="noteB"></div>
+        <p class="foot">Press E to close. It is saved in your journal.</p>
+        <div class="row"><button class="btn" id="noteX" type="button">Close</button></div>
+      </div></div></div>
+
+      <div class="screen" id="clock"><div class="card">
+        <h2>The grandfather clock</h2>
+        <svg id="clk" viewBox="0 0 200 200" aria-hidden="true"></svg>
+        <div id="clkTxt"></div>
+        <div class="row">
+          <button class="btn" id="clkM" type="button" aria-label="Turn hour hand back">&minus;</button>
+          <button class="btn" id="clkP" type="button" aria-label="Turn hour hand forward">+</button>
+          <button class="btn primary" id="clkSet" type="button">Set the clock</button>
+        </div>
+        <p class="small" style="text-align:center">A / D turn the hour hand. Enter sets it. Esc closes.</p>
+      </div></div>
+
+      <div class="screen" id="safe"><div class="card">
+        <h2>The iron safe</h2>
+        <p style="text-align:center;color:var(--muted)">Three dials. Each one turns from 0 to 9.</p>
+        <div class="wheels" id="wheels"></div>
+        <div id="safeMsg"></div>
+        <div class="row"><button class="btn primary" id="safeTry" type="button">Try the code</button><button class="btn" id="safeX" type="button">Step back</button></div>
+        <p class="small" style="text-align:center">A / D pick a dial. W / S turn it. Enter tries. Esc closes.</p>
+      </div></div>
+
+      <div class="screen" id="cellEntryModal"><div class="card cell-entry-card">
+        <h2 id="cellTitle">Cell A</h2>
+        <p class="small" style="text-align:center">Enter the experiment recording timestamp, without the colon.</p>
+        <div class="cell-terminal"><label for="cellEntry">RECORDING TIMESTAMP</label>
+          <input id="cellEntry" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" placeholder="___" aria-label="Three-digit timestamp">
+          <div id="cellFeedback" role="status" aria-live="polite"></div>
+        </div>
+        <div class="row"><button class="btn primary" id="cellSubmit" type="button">Unlock cell</button><button class="btn" id="cellCancel" type="button">Step back</button></div>
+      </div></div>
+
+      <div class="screen" id="radioTuner"><div class="card radio-card">
+        <h2>The radio</h2>
+        <p class="small" style="text-align:center">Tune the frequency from the cell wall.</p>
+        <div class="radio-console">
+          <div class="radio-brand">THE LISTENING ROOM · RECEIVER</div>
+          <div class="radio-display" id="radioFrequency" aria-live="polite">00.0 MHz</div>
+          <div class="radio-knobs">
+            <div class="radio-control"><span>HUNDREDS</span><div id="radioKnob0" class="radio-knob" role="slider" tabindex="0" aria-label="First frequency digit" aria-valuemin="0" aria-valuemax="9"><span class="radio-knob-number">0</span></div></div>
+            <div class="radio-control"><span>TENS</span><div id="radioKnob1" class="radio-knob" role="slider" tabindex="0" aria-label="Second frequency digit" aria-valuemin="0" aria-valuemax="9"><span class="radio-knob-number">0</span></div></div>
+            <div class="radio-control"><span>DECIMAL</span><div id="radioKnob2" class="radio-knob" role="slider" tabindex="0" aria-label="Third frequency digit" aria-valuemin="0" aria-valuemax="9"><span class="radio-knob-number">0</span></div></div>
+          </div>
+          <div id="radioFeedback" role="status" aria-live="polite"></div>
+        </div>
+        <div class="row"><button class="btn primary" id="radioSubmit" type="button">Tune in</button><button class="btn" id="radioCancel" type="button">Step back</button></div>
+        <p class="small" style="text-align:center">Drag each knob around its center to rotate it. Arrow keys also work.</p>
+      </div></div>
+
+      <div class="screen" id="tapeLocker"><div class="card tape-card">
+        <h2>Tape Locker</h2>
+        <p class="small" style="text-align:center">The archive requires the photograph number of the escaped patient.</p>
+        <div class="tape-terminal">
+          <div class="tape-heading">PATIENT ARCHIVE</div>
+          <label for="tapeNumber">PHOTOGRAPH NUMBER</label>
+          <input id="tapeNumber" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Photograph number">
+          <div id="tapeMsg" role="status" aria-live="polite"></div>
+        </div>
+        <div class="row"><button class="btn primary" id="tapeTry" type="button">Unlock</button><button class="btn" id="tapeX" type="button">Step back</button></div>
+        <p class="small" style="text-align:center">Type a digit. Enter unlocks. Esc closes.</p>
+      </div></div>
+
+      <div class="screen" id="dollhouse"><div class="card doll-card">
+        <h2>The Dollhouse</h2>
+        <p class="small" style="text-align:center">Arrange Wren's miniature furniture in the three corners.</p>
+        <div class="doll-slots" id="dollSlots"></div>
+        <p class="small" style="text-align:center">Drag a piece into a corner, or click a piece and then a corner.</p>
+        <div class="doll-tray" id="dollTray"></div>
+        <div id="dollMsg" aria-live="polite"></div>
+        <div class="row"><button class="btn primary" id="dollTry" type="button">Turn the key</button><button class="btn" id="dollX" type="button">Step back</button></div>
+      </div></div>
+
+      <div class="screen" id="journal"><div class="card">
+        <h2>Journal</h2>
+        <div id="jInv" class="small" style="margin-bottom:8px"></div>
+        <div id="jNotes"></div>
+        <div class="row"><button class="btn" id="jX" type="button">Close</button></div>
+      </div></div>
+
+      <div class="screen" id="menu"><div class="card">
+        <h2>Paused</h2>
+        <div class="stack">
+          <button class="btn primary" id="mResume" type="button">Resume</button>
+          <label class="vol">Volume <input type="range" id="vol" min="0" max="100" value="80" aria-label="Volume"></label>
+          <button class="btn" id="bSound" type="button">Sound: on</button>
+          <button class="btn" id="bVoice" type="button">Voice-over: on</button>
+          <button class="btn" id="mStage" type="button">Restart this stage</button>
+          <button class="btn" id="mQuit" type="button">Quit to title</button>
+        </div>
+        <p class="small">W A S D move. E interact. H hint. J journal. M mute. In Stage 3, R switches the emergency lighting.</p>
+      </div></div>
+
+      <div class="screen" id="over"><div class="card" style="text-align:center">
+        <h2>The manor keeps you</h2>
+        <p style="color:var(--muted)">Your nerve is gone. The house is quiet again, and it is patient.</p>
+        <div class="row"><button class="btn primary" id="bRetry" type="button">Retry this stage</button><button class="btn" id="bQuit2" type="button">Quit to title</button></div>
+      </div></div>
+
+      <div class="screen" id="win"><div class="card" style="text-align:center">
+        <h2>The night air</h2>
+        <p>The iron lock turns. You stumble onto the lawn and do not look back.</p>
+        <p style="color:var(--muted)">Except once. In the highest window, a pale face lifts a hand and waves.</p>
+        <p class="small" id="winStats"></p>
+        <div class="row"><button class="btn primary" id="bAgain" type="button">Play again</button></div>
+      </div></div>
+    </div>
+    <div id="help">W A S D move &nbsp; E interact &nbsp; H hint &nbsp; J journal &nbsp; Esc menu &nbsp; M mute</div>
+  </div>
+
+  <div id="touch">
+    <div class="dpad">
+      <span></span><button class="tb" data-hold="KeyW" aria-label="Up">&#9650;</button><span></span>
+      <button class="tb" data-hold="KeyA" aria-label="Left">&#9664;</button><span></span><button class="tb" data-hold="KeyD" aria-label="Right">&#9654;</button>
+      <span></span><button class="tb" data-hold="KeyS" aria-label="Down">&#9660;</button><span></span>
+    </div>
+    <div class="tcol">
+      <div class="trow">
+        <button class="tb sm" data-tap="Escape" aria-label="Menu">&#9776;</button>
+        <button class="tb sm" data-tap="KeyR" aria-label="Emergency light (Stage 3)">R</button>
+        <button class="tb sm" data-tap="KeyH" aria-label="Hint">H</button>
+      </div>
+      <button class="tb big" data-tap="KeyE" aria-label="Interact">E</button>
+    </div>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
