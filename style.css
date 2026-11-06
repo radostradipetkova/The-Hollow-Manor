@@ -204,3 +204,19 @@ canvas{display:block;width:100%;height:100%}
 .radio-knob-number{pointer-events:none}
 #radioFeedback{text-align:center;min-height:23px;color:#f1c7a8;font-size:13px}
 @media(max-width:450px){.radio-console{padding:14px 7px}.radio-knob{width:72px;height:72px}.radio-knob:before{transform-origin:2.5px 22px}.radio-control{font-size:9px}.radio-display{font-size:28px}}
+
+/* ===== The four seals: typed code with a symbol over each digit ===== */
+.seals{display:flex;gap:clamp(10px,3vw,22px);justify-content:center;margin:18px 0 10px}
+.seal{display:flex;flex-direction:column;align-items:center;gap:10px}
+.seal-glyph{width:62px;height:62px;display:grid;place-items:center;border-radius:12px 12px 6px 6px;color:#9ab;
+  background:linear-gradient(#5a6468,#3f474b);border:1px solid #6b777c;box-shadow:inset 0 2px 0 rgba(255,255,255,.12),inset 0 -6px 10px rgba(0,0,0,.35);transition:color .3s,box-shadow .3s}
+.seal-glyph svg{width:34px;height:34px;overflow:visible}
+.seal input{width:62px;height:70px;padding:0;text-align:center;font-family:var(--ui);font-size:38px;font-weight:700;color:var(--ink);caret-color:var(--gold);
+  background:var(--bg);border:1px solid var(--line);border-radius:10px;outline:none;transition:border-color .15s,box-shadow .15s}
+.seal input::placeholder{color:#3f3346}
+.seal input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(229,194,121,.25)}
+.seal.lit .seal-glyph{color:#5fd35f;box-shadow:0 0 18px rgba(95,211,95,.55),inset 0 2px 0 rgba(255,255,255,.12)}
+.seal.bad .seal-glyph{color:var(--blood)}
+.seals.shake{animation:sealShake .4s}
+@keyframes sealShake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+@media (max-width:420px){.seal-glyph,.seal input{width:52px}.seal input{height:60px;font-size:32px}.seal-glyph{height:52px}}

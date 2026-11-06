@@ -917,11 +917,66 @@ const sealO=k=>({x:[90,190,390,490][k],y:70,w:36,h:40,solid:true,label:'Examine 
   draw:(c,o)=>{rect(c,o.x,o.y+14,o.w,26,'#4a5256');rect(c,o.x+4,o.y,o.w-8,16,'#5a6468');c.strokeStyle=T.seals?'#5fd35f':'#9ab';c.lineWidth=1.6;const x=o.x+18,y=o.y+8,n=SYM[k][0];
     if(n==='clock'){c.beginPath();c.arc(x,y,6,0,6.3);c.stroke()}else if(n==='eye'){c.beginPath();c.ellipse(x,y,8,4,0,0,6.3);c.stroke();c.fillStyle=c.strokeStyle;c.beginPath();c.arc(x,y,2,0,6.3);c.fill()}
     else if(n==='note'){c.beginPath();c.arc(x-2,y+3,3,0,6.3);c.moveTo(x+1,y+3);c.lineTo(x+1,y-6);c.stroke()}else{c.strokeRect(x-5,y-6,10,12)}},act:()=>say(SYM[k][1],5)});
+/* typed code for the four seals: one digit under each carved symbol */
+const SEAL_SVG={
+  clock:'<circle cx="0" cy="0" r="10"/>'+[0,1,2,3,4,5,6,7,8,9,10,11].map(i=>{const a=i*Math.PI/6;return '<circle cx="'+(Math.sin(a)*7).toFixed(2)+'" cy="'+(-Math.cos(a)*7).toFixed(2)+'" r="'+(i%3?.6:1.1)+'" fill="currentColor" stroke="none"/>'}).join(''),
+  eye:'<ellipse cx="0" cy="0" rx="12" ry="6"/><circle cx="0" cy="0" r="3" fill="currentColor"/>',
+  note:'<circle cx="-3" cy="6" r="4.5"/><path d="M1.5 6V-10"/>',
+  glass:'<rect x="-7" y="-10" width="14" height="20" rx="1"/>'};
+let sealCfg=null;
+const closeSeal=()=>{const a=document.activeElement;if(a&&a.blur)a.blur();closeModal()};
+function openSealCode(title,target,ok,intro){
+  let el=$('sealCode');
+  if(!el){
+    el=document.createElement('div');el.className='screen';el.id='sealCode';
+    el.innerHTML='<div class="card"><h2></h2><p class="small" style="text-align:center;color:var(--muted)"></p><div class="seals" id="sealRow"></div><div id="sealMsg" role="status" aria-live="polite" style="min-height:1.6em;text-align:center;color:var(--muted);font-family:var(--ui);font-size:14px"></div><div class="row"><button class="btn primary" id="sealTry" type="button">Try the code</button><button class="btn" id="sealX" type="button">Step back</button></div><p class="small" style="text-align:center">Type a number under each seal. Backspace goes back. Enter tries. Esc closes.</p></div>';
+    $('view').appendChild(el);
+    el.querySelector('#sealTry').onclick=trySealCode;el.querySelector('#sealX').onclick=closeSeal;
+  }
+  sealCfg={target,ok,busy:false};
+  el.querySelector('h2').textContent=title;el.querySelector('p').textContent=intro||'';
+  const row=$('sealRow');row.innerHTML='';row.classList.remove('shake');$('sealMsg').textContent='';
+  SYM.slice(0,target.length).forEach(([n,desc],i)=>{
+    const s=document.createElement('div');s.className='seal';
+    s.innerHTML='<div class="seal-glyph" title="'+desc.split('.')[0]+'"><svg viewBox="-13 -13 26 26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">'+SEAL_SVG[n]+'</svg></div>';
+    const inp=document.createElement('input');inp.type='text';inp.inputMode='numeric';inp.maxLength=1;inp.autocomplete='off';inp.placeholder='–';
+    inp.setAttribute('aria-label','Number for the '+n+' seal');
+    inp.addEventListener('keydown',e=>{
+      e.stopPropagation();
+      if(!modal||modal.id!=='sealCode'){inp.blur();return}
+      const all=[...row.querySelectorAll('input')];
+      if(e.key==='Enter'){e.preventDefault();trySealCode()}
+      else if(e.key==='Escape'){e.preventDefault();closeSeal()}
+      else if(e.key==='Backspace'&&!inp.value&&i>0){e.preventDefault();all[i-1].value='';all[i-1].focus()}
+      else if(e.key==='ArrowLeft'&&i>0){e.preventDefault();all[i-1].focus()}
+      else if(e.key==='ArrowRight'&&i<all.length-1){e.preventDefault();all[i+1].focus()}
+      else if(/^\d$/.test(e.key)){e.preventDefault();inp.value=e.key;sfx.light();s.classList.remove('bad');if(i<all.length-1)all[i+1].focus()}
+      else if(e.key.length===1)e.preventDefault();
+    });
+    inp.addEventListener('input',()=>{const d=inp.value.replace(/\D/g,'').slice(-1);inp.value=d;if(d){sfx.light();const all=row.querySelectorAll('input');if(i<all.length-1)all[i+1].focus()}});
+    inp.addEventListener('focus',()=>inp.select());
+    s.appendChild(inp);row.appendChild(s);
+  });
+  openModal('sealCode',c=>{if(c==='Escape')closeSeal();else if(c==='Enter')trySealCode()});
+  setTimeout(()=>{const f=row.querySelector('input');if(f)f.focus()},50);
+}
+function trySealCode(){
+  if(!sealCfg||sealCfg.busy)return;
+  const row=$('sealRow'),ins=[...row.querySelectorAll('input')],seals=[...row.querySelectorAll('.seal')],code=ins.map(x=>x.value).join('');
+  if(code.length<ins.length){sfx.bad();$('sealMsg').textContent='Every seal needs a number.';const e=ins.find(x=>!x.value);if(e)e.focus();return}
+  if(code===sealCfg.target){
+    sealCfg.busy=true;ins.forEach(x=>x.disabled=true);$('sealMsg').textContent='The seals drink the numbers in.';
+    seals.forEach((s,i)=>setTimeout(()=>{s.classList.add('lit');sfx.light()},i*260));
+    setTimeout(()=>{const f=sealCfg.ok;closeSeal();f()},seals.length*260+700);return}
+  sfx.bad();row.classList.remove('shake');void row.offsetWidth;row.classList.add('shake');
+  seals.forEach(s=>s.classList.add('bad'));setTimeout(()=>seals.forEach(s=>s.classList.remove('bad')),700);
+  $('sealMsg').textContent='The symbols flare red, then go dark. Nothing moves.';setTimeout(()=>{ins.forEach(x=>x.value='');ins[0].focus()},450);
+}
 const STAGE6={
   core:{name:'The Heart of the Manor',paint:paintCore,lights:()=>[{x:320,y:100,r:210,a:.55}],objs:[
     ...[0,1,2,3].map(sealO),
     {x:290,y:6,w:60,h:52,label:'Place the seals',draw:(c,o)=>{if(T.seals)rect(c,o.x+6,o.y+6,o.w-12,o.h-6,'#04100f')},
-      act:()=>{if(T.seals){say('The great door stands open.');return}openDial('The four seals',4,'7432',()=>{T.seals=true;heal();sfx.solve();shake=.5;say('The four symbols ignite. Deep in the walls, something enormous begins to turn.',6)},'Four seals, left to right. Each wants one number from your memories of the manor.')}},
+      act:()=>{if(T.seals){say('The great door stands open.');return}openSealCode('The four seals','7432',()=>{T.seals=true;heal();sfx.solve();shake=.5;say('The four symbols ignite. Deep in the walls, something enormous begins to turn.',6)},'Four seals, left to right. Each wants one number from your memories of the manor.')}},
     lockerO(60,110),lockerO(544,270),
     lureO(470,110,'Switch on the radio','The old radio crackles to life. The thing drifts toward the sound.'),
     D(292,64,56,20,'machine',320,310,()=>!T.seals,'The great door is sealed. Four symbols are carved above it.')]},
