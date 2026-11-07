@@ -2665,7 +2665,7 @@ function toyHorse(c){
     if(T.shadow){c.fillStyle='rgba(0,0,0,.6)';c.beginPath();c.ellipse(320,40,36,16,0,0,6.3);c.fill();c.fillStyle='#c0392b';c.beginPath();c.arc(320,40,6,0,6.3);c.fill()}
   }})}
 /* ===== Stage 3: carry the bottles to the table and pour them into the beaker (no counters) ===== */
-const BPOS0=[[70,24],[500,296],[200,24]],BLBL=['Acid. Handle with care.','Base. Clear as water.','Reagent. Yellow as old teeth.'];
+const BPOS0=[[70,24],[200,24],[500,296]],BLBL=['Acid. Handle with care.','Base. Clear as water.','Reagent. Yellow as old teeth.'];
 const hexRgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
 function drawHeld(){const c=BOT[T.held].c;rect(ctx,player.x+6,player.y-32,8,6,'#ccc');rect(ctx,player.x+4,player.y-26,12,16,c);ctx.fillStyle='#fff';ctx.font='bold 9px Georgia';ctx.textAlign='center';ctx.fillText('ABC'[T.held],player.x+10,player.y-14)}
 function dropBottle(){
