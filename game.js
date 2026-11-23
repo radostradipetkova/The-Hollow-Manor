@@ -195,9 +195,7 @@ function openCellEntry(k,success){
   openModal('cellEntryModal',code=>{
     if(code==='Escape'||code==='KeyE'){closeModal();return}
     if(code==='Enter'){tryCellEntry();return}
-    if(/^(Digit|Numpad)[0-9]$/.test(code)){
-      const field=$('cellEntry');field.value=(field.value+code.slice(-1)).slice(0,3);
-    }else if(code==='Backspace')$('cellEntry').value=$('cellEntry').value.slice(0,-1);
+    if(/^(Digit|Numpad)[0-9]$/.test(code)) $('cellEntry').focus();
   });
   $('cellEntry').focus();
 }
@@ -270,11 +268,7 @@ function openTapeLocker(){
   openModal('tapeLocker',code=>{
     if(code==='Escape'||code==='KeyE'){closeModal();return}
     if(code==='Enter'){tryTapeLocker();return}
-    if(/^Digit[0-9]$/.test(code)||/^Numpad[0-9]$/.test(code)){
-      input.value=code.slice(-1);
-      return;
-    }
-    if(code==='Backspace'||code==='Delete')input.value='';
+    if(/^(Digit|Numpad)[0-9]$/.test(code)) input.focus();
   });
   input.focus();
 }
