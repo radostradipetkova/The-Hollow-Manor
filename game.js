@@ -842,7 +842,7 @@ const paintObs=c=>{paintBase(c,{floor:'#2a2f33',floor2:'#252a2e',wall:'#1a2530',
 const note3=(f,t,n)=>()=>{f();addNote(t,n);showNote(t,n)};
 const STAGE3={
   lab:{name:'The Laboratory',paint:paintLab,lights:()=>[{x:320,y:200,r:T.power?290:80,a:.7},{x:318,y:60,r:70,a:.6}],objs:[
-    botObj(0,70,24),botObj(2,200,24),botObj(1,500,296,'red'),
+    botObj(0,70,24),botObj(2,200,24,'red'),botObj(1,500,296),
     {x:96,y:200,w:100,h:44,solid:true,label:'Read the experiment log',draw:(c,o)=>{rect(c,o.x,o.y,o.w,o.h,'#3a3a3c');rect(c,o.x+30,o.y+12,34,22,'#d9ccab')},act:note3(()=>{},'Experiment log',EXP)},
     {x:290,y:170,w:110,h:50,solid:true,label:'Mix the reagents',draw:(c,o)=>{rect(c,o.x,o.y,o.w,o.h,'#4a5256');rect(c,o.x,o.y,o.w,5,'#6a7478');c.fillStyle='#cfd8dc';c.beginPath();c.ellipse(o.x+55,o.y+26,16,8,0,0,6.3);c.fill();if(T.ink){c.fillStyle='rgba(120,170,255,.8)';c.beginPath();c.ellipse(o.x+55,o.y+26,10,5,0,0,6.3);c.fill()}},
       act:()=>{if(T.ink){say('The dish still glows faintly blue.');return}if(!T.b.every(Boolean)){say('Three empty slots for bottles. You are still missing some.',4);return}
