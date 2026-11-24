@@ -1,0 +1,11 @@
+{
+  "name": "the-hollow-manor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dependency-free source build and integrity checks for The Hollow Manor",
+  "scripts": {
+    "build": "node tools/build-game.mjs",
+    "check": "node tools/build-game.mjs --check",
+    "test": "node tools/build-game.mjs --check && node --check game.js"
+  }
+}
