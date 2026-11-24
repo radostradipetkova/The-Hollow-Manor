@@ -37,3 +37,13 @@ The original game is wrapped in **one immediately invoked function** and shares 
 - [docs/REGRESSION-CHECKLIST.md](docs/REGRESSION-CHECKLIST.md) provides the manual gameplay checks to perform after behavior-changing edits.
 
 Prior-version backups are always available as ZIP archives of immutable Git commits.
+
+### Autosave and Continue
+
+The game automatically saves to this browser's local storage at each room transition, at stage entrances, after interactions, about every four seconds of active play, and when the page is hidden or closed.
+
+Continue restores the current room, position, health, collected items, notes, lighting, and stage-specific puzzle progress. Older stage-only saves remain supported: they resume from their original stage entrance.
+
+Autosave is local to this browser/device and does not synchronize across devices. Starting a New Game replaces the previous Continue slot; ending records remain separate. Clearing browser storage or ending a private browsing session may erase progress.
+
+The JavaScript build check and save-game regression tests run together through npm test.

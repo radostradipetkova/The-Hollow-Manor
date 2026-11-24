@@ -93,10 +93,11 @@ ROOMS.base={name:'The Basement',paint:paintX(0,0),lights:()=>[{x:320,y:110,r:240
 function startMaze(keep){
   ['title','over','win'].forEach(i=>$(i).classList.remove('on'));
   if(keep===true&&chapter===8&&T.parts){hearts=3;T.sp=[320,300];T.coal=0;T.st=null}
-  else{T={vis:{},parts:[],sp:[320,300]};saveGame(8)}
+  else{T={vis:{},parts:[],sp:[320,300]}}
   chapter=8;mode='play';roomId='m0';player.x=320;player.y=300;player.dir='up';
   ghost.on=false;ghost.timer=Infinity;fade=1;roomT=3;hearts=3;invuln=0;updateHUD();
   say('The machine is not here. It is beneath the house, and the house has built a maze around the stairs. Ten rooms. Ten parts.',8);
+  saveGame();
 }
 function hint8(){
   const p=T.parts||[],n=p.filter(Boolean).length;let t;

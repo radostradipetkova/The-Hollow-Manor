@@ -6,6 +6,6 @@
   "scripts": {
     "build": "node tools/build-game.mjs",
     "check": "node tools/build-game.mjs --check",
-    "test": "node tools/build-game.mjs --check && node --check game.js"
+    "test": "node tools/build-game.mjs --check && node --check game.js && node --test tools/autosave.test.mjs"
   }
 }

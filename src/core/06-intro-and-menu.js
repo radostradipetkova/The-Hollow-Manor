@@ -69,12 +69,92 @@ function toast(t){
   if(!el){el=document.createElement('div');el.id='toast';el.style.cssText='position:absolute;right:12px;top:12px;padding:6px 14px;background:rgba(13,10,16,.88);border:1px solid var(--line);border-radius:999px;font:600 12px var(--ui);color:var(--gold);letter-spacing:.06em;text-transform:uppercase;opacity:0;transition:opacity .4s;pointer-events:none;z-index:6';$('view').appendChild(el)}
   el.textContent=t;el.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>{el.style.opacity=0},2600);
 }
-function saveGame(n,x){try{localStorage.setItem('hm',JSON.stringify(Object.assign({c:n,n:notes},x||{})));toast('Checkpoint saved')}catch(e){}}
+/* ===== AUTOSAVE V2: persist room, items and puzzle progress ===== */
+const SAVE_KEY='hm',SAVE_VERSION=2;
+let lastSaveJson='',autosaveClock=0;
+function snapshotGame(){
+  if(!ROOMS[roomId])return null;
+  return {
+    v:SAVE_VERSION,c:chapter,n:notes,room:roomId,
+    player:{x:player.x,y:player.y,dir:player.dir},
+    state:S,stage:T,hp:hearts,lit,seq,red:redMode,
+    elapsed:time,played:playTime,event:eventT,beat:beatT,
+    corridor:{xs:corr.xs,good:corr.good},dolls:dollSlots,
+    clock:clkH,clock2:{hour:C2CK.hour,minute:C2CK.minute},
+    jb:JB||[],w:!!T.wiped
+  };
+}
+function saveGame(){
+  if(mode!=='play'&&mode!=='modal')return false;
+  const data=snapshotGame();if(!data)return false;
+  try{
+    const json=JSON.stringify(data);
+    if(json!==lastSaveJson){localStorage.setItem(SAVE_KEY,json);lastSaveJson=json}
+    return true;
+  }catch(e){return false}
+}
+function validSnapshot(d){
+  return !!(d&&d.v===SAVE_VERSION&&Number.isInteger(d.c)&&d.c>=1&&d.c<=8&&
+    typeof d.room==='string'&&Object.prototype.hasOwnProperty.call(ROOMS,d.room)&&
+    d.player&&Number.isFinite(d.player.x)&&Number.isFinite(d.player.y)&&
+    d.player.x>=32&&d.player.x<=608&&d.player.y>=64&&d.player.y<=352&&
+    d.state&&typeof d.state==='object'&&!Array.isArray(d.state)&&
+    d.stage&&typeof d.stage==='object'&&!Array.isArray(d.stage)&&
+    Array.isArray(d.n)&&Array.isArray(d.lit)&&Array.isArray(d.seq));
+}
+function restoreSnapshot(d){
+  if(!validSnapshot(d))return false;
+  reset();
+  chapter=d.c;roomId=d.room;S=d.state;T=d.stage;notes=d.n;
+  hearts=Number.isInteger(d.hp)?Math.max(1,Math.min(3,d.hp)):3;
+  lit=d.lit;seq=d.seq;redMode=!!d.red;
+  player.x=d.player.x;player.y=d.player.y;
+  player.dir=['up','down','left','right'].includes(d.player.dir)?d.player.dir:'down';
+  player.step=0;player.moving=false;
+  time=Number.isFinite(d.elapsed)?Math.max(0,d.elapsed):0;
+  playTime=Number.isFinite(d.played)?Math.max(0,d.played):0;
+  eventT=Number.isFinite(d.event)?d.event:30;
+  beatT=Number.isFinite(d.beat)?d.beat:0;
+  if(d.corridor&&Array.isArray(d.corridor.xs)&&d.corridor.xs.length===3&&
+    d.corridor.xs.every(Number.isFinite)&&Number.isInteger(d.corridor.good)){
+    corr={xs:d.corridor.xs.slice(),good:d.corridor.good};
+  }
+  dollSlots=Array.isArray(d.dolls)&&d.dolls.length===3?d.dolls.slice():[null,null,null];
+  if(Number.isFinite(d.clock))clkH=d.clock;
+  if(d.clock2){
+    if(Number.isFinite(d.clock2.hour))C2CK.hour=d.clock2.hour;
+    if(Number.isFinite(d.clock2.minute))C2CK.minute=d.clock2.minute;
+  }
+  JB=Array.isArray(d.jb)?d.jb:null;
+  if(chapter===5){if(!Array.isArray(T.h))T.h=[];T.h.push([time,player.x,player.y])}
+  if(chapter===6||chapter===7)T.hide=0;
+  ghost.on=false;ghost.timer=GH.includes(roomId)?6:Infinity;
+  invuln=2;fade=1;roomT=2.5;doorCool=.8;near=null;
+  mode='play';initAudio();unstick();updateHUD();
+  lastSaveJson='';autosaveClock=0;saveGame();
+  say('Progress restored. You are back where you left off.',4);
+  return true;
+}
 function cpLabel(c){return c===8?'The Maze':c===7?'Cycle 02':'Stage '+c+': '+STN[c-1]}
-function refreshContinue(){let ok=false,lab='';try{const d=JSON.parse(localStorage.getItem('hm'));ok=!!(d&&d.c>1);if(ok)lab=cpLabel(d.c)}catch(e){}$('bContinue').hidden=!ok;if(ok)$('bContinue').textContent='Continue: '+lab;refreshTitleExtras()}
+function refreshContinue(){
+  let label='';
+  try{
+    const d=JSON.parse(localStorage.getItem(SAVE_KEY));
+    if(validSnapshot(d))label=cpLabel(d.c)+(ROOMS[d.room].name?' — '+ROOMS[d.room].name:'');
+    else if(d&&Number.isInteger(d.c)&&d.c>=2&&d.c<=8)label=cpLabel(d.c);
+  }catch(e){}
+  $('bContinue').hidden=!label;
+  if(label)$('bContinue').textContent='Continue: '+label;
+  refreshTitleExtras();
+}
 function continueGame(){
-  let d=null;try{d=JSON.parse(localStorage.getItem('hm'))}catch(e){}
-  if(!d||!(d.c>1)){start();return}
+  let d=null;try{d=JSON.parse(localStorage.getItem(SAVE_KEY))}catch(e){}
+  if(validSnapshot(d)){
+    ['title','over','win'].forEach(i=>$(i).classList.remove('on'));
+    restoreSnapshot(d);return;
+  }
+  // Legacy checkpoints have only the stage number and journal.
+  if(!d||!Number.isInteger(d.c)||d.c<2||d.c>8){start();return}
   ['title','over','win'].forEach(i=>$(i).classList.remove('on'));
   reset();notes=Array.isArray(d.n)?d.n:[];mode='play';initAudio();
   if(d.c===7){if(d.w){notes=Array.isArray(d.jb)?d.jb.slice():[];startCycle2(true)}else startCycle2();return}
@@ -91,7 +171,7 @@ function restartStage(){
   if(chapter===1)start(true);else if(chapter===7)startCycle2(!!T.wiped&&!T.jok);else if(chapter===8)startMaze(true);else{mode='play';beginStage(chapter)}
 }
 function quitToTitle(){
-  closeModal();['over','win'].forEach(i=>$(i).classList.remove('on'));$('msg').classList.remove('show');
+  saveGame();closeModal();['over','win'].forEach(i=>$(i).classList.remove('on'));$('msg').classList.remove('show');
   reset();mode='title';$('title').classList.add('on');
 }
 $('bMenu').onclick=e=>{e.currentTarget.blur();if(mode==='play')openMenu();else if(modal&&modal.id==='menu')closeModal()};

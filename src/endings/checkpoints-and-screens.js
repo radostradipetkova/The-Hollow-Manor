@@ -29,6 +29,7 @@ function startFromCheckpoint(){
   T={lure:0,hide:0,seals:true,mem:true};roomId='machine';player.x=320;player.y=300;player.dir='up';
   ghost.on=false;ghost.timer=Infinity;fade=1;roomT=2.5;hearts=3;updateHUD();
   say('Your memories are whole again. The machine waits. Face it when you are ready.',6);
+  saveGame();
 }
 function refreshTitleExtras(){
   const row=document.querySelector('#title .row');if(!row)return;

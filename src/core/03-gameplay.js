@@ -2,15 +2,17 @@
 function start(skip){
   ['title','over','win'].forEach(i=>$(i).classList.remove('on'));
   if(modal){$(modal.id).classList.remove('on')}
-  reset();initAudio();
+  try{localStorage.removeItem(SAVE_KEY)}catch(e){}
+  lastSaveJson='';reset();initAudio();
   if(skip===true){beginPlay();return}
   runIntro();
 }
-function beginPlay(){mode='play';fade=1;say('The front door slammed behind you and the bolt slid home. There must be another way out.',6)}
+function beginPlay(){mode='play';fade=1;say('The front door slammed behind you and the bolt slid home. There must be another way out.',6);saveGame()}
 function changeRoom(to,sx,sy){
   sfx.door();roomId=to;if(to==='whisper')T.heard=true;if(to==='playroom')T.playIn=true;if(to==='seance')T.seIn=true;if(to==='archive'&&T.port&&T.heard&&!T.face){T.face=true;setTimeout(()=>{say('A sixth portrait hangs among the Vanes. The face in the frame is yours.',6);sfx.scare();lightsOut=.4},700)}player.x=sx;player.y=sy;unstick();fade=1;roomT=2.5;
   ghost.on=false;ghost.timer=GH.includes(to)?5:Infinity;doorCool=.6;
   if(to==='foyer')say('The hall is quiet. Nothing has ever followed you here.',3);
+  saveGame();
 }
 const GH=['library','dining','cellar','whisper','core','machine','library2','dining2','cells','radio','m10'];
 const ghostRoom=()=>GH.includes(roomId);
@@ -58,8 +60,8 @@ function unstick(){
   }
 }
 function interact(){
-  if(!near){if(chapter===3&&T.held!=null){dropBottle();return}examineCandle();return}
-  near.act();
+  if(!near){if(chapter===3&&T.held!=null){dropBottle();saveGame();return}examineCandle();return}
+  near.act();saveGame();
 }
 function labelOf(o){return typeof o.label==='function'?o.label():(o.label||'Examine')}
 

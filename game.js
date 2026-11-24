@@ -961,6 +961,7 @@ function switchWorld(){
   if(blocked(player.x,player.y)){player.x=320;player.y=310}
   if(!T.fals){T.fals=1;T.dop=1;notes.forEach(n=>{n.text=n.text.replace('born in 1889','born in 1809').replace('the first step','the second step')});
     say('Something in your journal has changed. And across the hall, someone is copying your every move.',6)}
+  saveGame();
 }
 function beginStage5(){
   chapter=5;T={h:[]};redMode=false;hearts=3;updateHUD();roomId='hallR';player.x=320;player.y=310;player.dir='up';
@@ -1393,6 +1394,7 @@ function startFromCheckpoint(){
   T={lure:0,hide:0,seals:true,mem:true};roomId='machine';player.x=320;player.y=300;player.dir='up';
   ghost.on=false;ghost.timer=Infinity;fade=1;roomT=2.5;hearts=3;updateHUD();
   say('Your memories are whole again. The machine waits. Face it when you are ready.',6);
+  saveGame();
 }
 function refreshTitleExtras(){
   const row=document.querySelector('#title .row');if(!row)return;
@@ -1597,9 +1599,10 @@ function startCycle2(wiped){wiped=wiped===true;
   ['title','over','win'].forEach(i=>$(i).classList.remove('on'));
   if(wiped){JB=notes.length?notes.slice():(JB||[]);try{localStorage.setItem('hmJB',JSON.stringify(JB))}catch(e){}}
   let nn=wiped?[]:notes;try{const d=JSON.parse(localStorage.getItem('hmCP'));if(!wiped&&d&&Array.isArray(d.n)&&!nn.length)nn=d.n}catch(e){}
-  reset();notes=nn;chapter=7;T={wiped,jok:!wiped};saveGame(7,{w:wiped,jb:JB||[]});mode='play';initAudio();roomId='foyer2';player.x=320;player.y=300;player.dir='up';
+  reset();notes=nn;chapter=7;T={wiped,jok:!wiped};mode='play';initAudio();roomId='foyer2';player.x=320;player.y=300;player.dir='up';
   ghost.on=false;ghost.timer=Infinity;fade=1;roomT=3;hearts=3;updateHUD();
   say(wiped?'You are back in the entrance hall. Your journal is gone, and your head feels strangely empty, like a room someone has cleared. Something here must remember for you.':'You are back in the entrance hall. The portraits are still there. The library, the dining room. But something is different.',9);
+  saveGame();
 }
 /* ===== Side quest: The Unfinished Seance (Stage 4, secret room) ===== */
 const SQ_COL=['#c0392b','#ebe6d8','#4a7ad0','#2f8a4a','#222'],SQ_NAME=['red','white','blue','green','black'];
@@ -2057,10 +2060,11 @@ ROOMS.base={name:'The Basement',paint:paintX(0,0),lights:()=>[{x:320,y:110,r:240
 function startMaze(keep){
   ['title','over','win'].forEach(i=>$(i).classList.remove('on'));
   if(keep===true&&chapter===8&&T.parts){hearts=3;T.sp=[320,300];T.coal=0;T.st=null}
-  else{T={vis:{},parts:[],sp:[320,300]};saveGame(8)}
+  else{T={vis:{},parts:[],sp:[320,300]}}
   chapter=8;mode='play';roomId='m0';player.x=320;player.y=300;player.dir='up';
   ghost.on=false;ghost.timer=Infinity;fade=1;roomT=3;hearts=3;invuln=0;updateHUD();
   say('The machine is not here. It is beneath the house, and the house has built a maze around the stairs. Ten rooms. Ten parts.',8);
+  saveGame();
 }
 function hint8(){
   const p=T.parts||[],n=p.filter(Boolean).length;let t;
@@ -2882,7 +2886,7 @@ const fragCount=()=>notes.filter(n=>n.title.startsWith('Fragment')).length;
   act:()=>{if(hasFrag(i)){say('Nothing more here.');return}sfx.pick();addNote('Fragment '+(i+1),t);showNote('Fragment '+(i+1)+' of 5',t);if(fragCount()===5)setTimeout(()=>say('That is all five fragments. Something deep in you begins to remember.',6),500)}}));
 function portOk(){T.port=true;heal();sfx.solve();shake=.3;addNote('Nursery rhyme',RHYME2);showNote('Nursery rhyme','The frames click into place. Behind the middle one a panel slides open. Inside, in a child\u2019s handwriting:\n\n'+RHYME2)}
 function doorOk(){T.door=true;heal();sfx.solve();shake=.5;say('The wall splits open. Beyond it, a staircase winds down into the dark.',5);setTimeout(stageEnd,3200)}
-function beginStage(n){saveGame(n);return n===2?beginStage2():n===3?beginStage3():n===4?beginStage4():n===5?beginStage5():beginStage6()}
+function beginStage(n){const result=n===2?beginStage2():n===3?beginStage3():n===4?beginStage4():n===5?beginStage5():beginStage6();saveGame();return result}
 function beginStage2(){
   chapter=2;T={route:0,cor:1,good:Math.floor(Math.random()*3)};hearts=3;updateHUD();roomId='corr';player.x=320;player.y=310;player.dir='up';
   ghost.on=false;ghost.timer=Infinity;fade=1;roomT=3;sfx.door();
@@ -2908,15 +2912,17 @@ function hint2(){
 function start(skip){
   ['title','over','win'].forEach(i=>$(i).classList.remove('on'));
   if(modal){$(modal.id).classList.remove('on')}
-  reset();initAudio();
+  try{localStorage.removeItem(SAVE_KEY)}catch(e){}
+  lastSaveJson='';reset();initAudio();
   if(skip===true){beginPlay();return}
   runIntro();
 }
-function beginPlay(){mode='play';fade=1;say('The front door slammed behind you and the bolt slid home. There must be another way out.',6)}
+function beginPlay(){mode='play';fade=1;say('The front door slammed behind you and the bolt slid home. There must be another way out.',6);saveGame()}
 function changeRoom(to,sx,sy){
   sfx.door();roomId=to;if(to==='whisper')T.heard=true;if(to==='playroom')T.playIn=true;if(to==='seance')T.seIn=true;if(to==='archive'&&T.port&&T.heard&&!T.face){T.face=true;setTimeout(()=>{say('A sixth portrait hangs among the Vanes. The face in the frame is yours.',6);sfx.scare();lightsOut=.4},700)}player.x=sx;player.y=sy;unstick();fade=1;roomT=2.5;
   ghost.on=false;ghost.timer=GH.includes(to)?5:Infinity;doorCool=.6;
   if(to==='foyer')say('The hall is quiet. Nothing has ever followed you here.',3);
+  saveGame();
 }
 const GH=['library','dining','cellar','whisper','core','machine','library2','dining2','cells','radio','m10'];
 const ghostRoom=()=>GH.includes(roomId);
@@ -2964,8 +2970,8 @@ function unstick(){
   }
 }
 function interact(){
-  if(!near){if(chapter===3&&T.held!=null){dropBottle();return}examineCandle();return}
-  near.act();
+  if(!near){if(chapter===3&&T.held!=null){dropBottle();saveGame();return}examineCandle();return}
+  near.act();saveGame();
 }
 function labelOf(o){return typeof o.label==='function'?o.label():(o.label||'Examine')}
 
@@ -3284,12 +3290,92 @@ function toast(t){
   if(!el){el=document.createElement('div');el.id='toast';el.style.cssText='position:absolute;right:12px;top:12px;padding:6px 14px;background:rgba(13,10,16,.88);border:1px solid var(--line);border-radius:999px;font:600 12px var(--ui);color:var(--gold);letter-spacing:.06em;text-transform:uppercase;opacity:0;transition:opacity .4s;pointer-events:none;z-index:6';$('view').appendChild(el)}
   el.textContent=t;el.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>{el.style.opacity=0},2600);
 }
-function saveGame(n,x){try{localStorage.setItem('hm',JSON.stringify(Object.assign({c:n,n:notes},x||{})));toast('Checkpoint saved')}catch(e){}}
+/* ===== AUTOSAVE V2: persist room, items and puzzle progress ===== */
+const SAVE_KEY='hm',SAVE_VERSION=2;
+let lastSaveJson='',autosaveClock=0;
+function snapshotGame(){
+  if(!ROOMS[roomId])return null;
+  return {
+    v:SAVE_VERSION,c:chapter,n:notes,room:roomId,
+    player:{x:player.x,y:player.y,dir:player.dir},
+    state:S,stage:T,hp:hearts,lit,seq,red:redMode,
+    elapsed:time,played:playTime,event:eventT,beat:beatT,
+    corridor:{xs:corr.xs,good:corr.good},dolls:dollSlots,
+    clock:clkH,clock2:{hour:C2CK.hour,minute:C2CK.minute},
+    jb:JB||[],w:!!T.wiped
+  };
+}
+function saveGame(){
+  if(mode!=='play'&&mode!=='modal')return false;
+  const data=snapshotGame();if(!data)return false;
+  try{
+    const json=JSON.stringify(data);
+    if(json!==lastSaveJson){localStorage.setItem(SAVE_KEY,json);lastSaveJson=json}
+    return true;
+  }catch(e){return false}
+}
+function validSnapshot(d){
+  return !!(d&&d.v===SAVE_VERSION&&Number.isInteger(d.c)&&d.c>=1&&d.c<=8&&
+    typeof d.room==='string'&&Object.prototype.hasOwnProperty.call(ROOMS,d.room)&&
+    d.player&&Number.isFinite(d.player.x)&&Number.isFinite(d.player.y)&&
+    d.player.x>=32&&d.player.x<=608&&d.player.y>=64&&d.player.y<=352&&
+    d.state&&typeof d.state==='object'&&!Array.isArray(d.state)&&
+    d.stage&&typeof d.stage==='object'&&!Array.isArray(d.stage)&&
+    Array.isArray(d.n)&&Array.isArray(d.lit)&&Array.isArray(d.seq));
+}
+function restoreSnapshot(d){
+  if(!validSnapshot(d))return false;
+  reset();
+  chapter=d.c;roomId=d.room;S=d.state;T=d.stage;notes=d.n;
+  hearts=Number.isInteger(d.hp)?Math.max(1,Math.min(3,d.hp)):3;
+  lit=d.lit;seq=d.seq;redMode=!!d.red;
+  player.x=d.player.x;player.y=d.player.y;
+  player.dir=['up','down','left','right'].includes(d.player.dir)?d.player.dir:'down';
+  player.step=0;player.moving=false;
+  time=Number.isFinite(d.elapsed)?Math.max(0,d.elapsed):0;
+  playTime=Number.isFinite(d.played)?Math.max(0,d.played):0;
+  eventT=Number.isFinite(d.event)?d.event:30;
+  beatT=Number.isFinite(d.beat)?d.beat:0;
+  if(d.corridor&&Array.isArray(d.corridor.xs)&&d.corridor.xs.length===3&&
+    d.corridor.xs.every(Number.isFinite)&&Number.isInteger(d.corridor.good)){
+    corr={xs:d.corridor.xs.slice(),good:d.corridor.good};
+  }
+  dollSlots=Array.isArray(d.dolls)&&d.dolls.length===3?d.dolls.slice():[null,null,null];
+  if(Number.isFinite(d.clock))clkH=d.clock;
+  if(d.clock2){
+    if(Number.isFinite(d.clock2.hour))C2CK.hour=d.clock2.hour;
+    if(Number.isFinite(d.clock2.minute))C2CK.minute=d.clock2.minute;
+  }
+  JB=Array.isArray(d.jb)?d.jb:null;
+  if(chapter===5){if(!Array.isArray(T.h))T.h=[];T.h.push([time,player.x,player.y])}
+  if(chapter===6||chapter===7)T.hide=0;
+  ghost.on=false;ghost.timer=GH.includes(roomId)?6:Infinity;
+  invuln=2;fade=1;roomT=2.5;doorCool=.8;near=null;
+  mode='play';initAudio();unstick();updateHUD();
+  lastSaveJson='';autosaveClock=0;saveGame();
+  say('Progress restored. You are back where you left off.',4);
+  return true;
+}
 function cpLabel(c){return c===8?'The Maze':c===7?'Cycle 02':'Stage '+c+': '+STN[c-1]}
-function refreshContinue(){let ok=false,lab='';try{const d=JSON.parse(localStorage.getItem('hm'));ok=!!(d&&d.c>1);if(ok)lab=cpLabel(d.c)}catch(e){}$('bContinue').hidden=!ok;if(ok)$('bContinue').textContent='Continue: '+lab;refreshTitleExtras()}
+function refreshContinue(){
+  let label='';
+  try{
+    const d=JSON.parse(localStorage.getItem(SAVE_KEY));
+    if(validSnapshot(d))label=cpLabel(d.c)+(ROOMS[d.room].name?' — '+ROOMS[d.room].name:'');
+    else if(d&&Number.isInteger(d.c)&&d.c>=2&&d.c<=8)label=cpLabel(d.c);
+  }catch(e){}
+  $('bContinue').hidden=!label;
+  if(label)$('bContinue').textContent='Continue: '+label;
+  refreshTitleExtras();
+}
 function continueGame(){
-  let d=null;try{d=JSON.parse(localStorage.getItem('hm'))}catch(e){}
-  if(!d||!(d.c>1)){start();return}
+  let d=null;try{d=JSON.parse(localStorage.getItem(SAVE_KEY))}catch(e){}
+  if(validSnapshot(d)){
+    ['title','over','win'].forEach(i=>$(i).classList.remove('on'));
+    restoreSnapshot(d);return;
+  }
+  // Legacy checkpoints have only the stage number and journal.
+  if(!d||!Number.isInteger(d.c)||d.c<2||d.c>8){start();return}
   ['title','over','win'].forEach(i=>$(i).classList.remove('on'));
   reset();notes=Array.isArray(d.n)?d.n:[];mode='play';initAudio();
   if(d.c===7){if(d.w){notes=Array.isArray(d.jb)?d.jb.slice():[];startCycle2(true)}else startCycle2();return}
@@ -3306,7 +3392,7 @@ function restartStage(){
   if(chapter===1)start(true);else if(chapter===7)startCycle2(!!T.wiped&&!T.jok);else if(chapter===8)startMaze(true);else{mode='play';beginStage(chapter)}
 }
 function quitToTitle(){
-  closeModal();['over','win'].forEach(i=>$(i).classList.remove('on'));$('msg').classList.remove('show');
+  saveGame();closeModal();['over','win'].forEach(i=>$(i).classList.remove('on'));$('msg').classList.remove('show');
   reset();mode='title';$('title').classList.add('on');
 }
 $('bMenu').onclick=e=>{e.currentTarget.blur();if(mode==='play')openMenu();else if(modal&&modal.id==='menu')closeModal()};
@@ -3321,7 +3407,13 @@ let last=performance.now();
 function frame(t){
   const dt=Math.min(.05,(t-last)/1000);last=t;
   update(dt);draw();
+  if(mode==='play'||mode==='modal'){
+    autosaveClock+=dt;
+    if(autosaveClock>=4){autosaveClock=0;saveGame()}
+  }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+addEventListener('pagehide',saveGame);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)saveGame()});
 })();

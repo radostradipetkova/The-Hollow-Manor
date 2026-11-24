@@ -101,7 +101,7 @@ const fragCount=()=>notes.filter(n=>n.title.startsWith('Fragment')).length;
   act:()=>{if(hasFrag(i)){say('Nothing more here.');return}sfx.pick();addNote('Fragment '+(i+1),t);showNote('Fragment '+(i+1)+' of 5',t);if(fragCount()===5)setTimeout(()=>say('That is all five fragments. Something deep in you begins to remember.',6),500)}}));
 function portOk(){T.port=true;heal();sfx.solve();shake=.3;addNote('Nursery rhyme',RHYME2);showNote('Nursery rhyme','The frames click into place. Behind the middle one a panel slides open. Inside, in a child\u2019s handwriting:\n\n'+RHYME2)}
 function doorOk(){T.door=true;heal();sfx.solve();shake=.5;say('The wall splits open. Beyond it, a staircase winds down into the dark.',5);setTimeout(stageEnd,3200)}
-function beginStage(n){saveGame(n);return n===2?beginStage2():n===3?beginStage3():n===4?beginStage4():n===5?beginStage5():beginStage6()}
+function beginStage(n){const result=n===2?beginStage2():n===3?beginStage3():n===4?beginStage4():n===5?beginStage5():beginStage6();saveGame();return result}
 function beginStage2(){
   chapter=2;T={route:0,cor:1,good:Math.floor(Math.random()*3)};hearts=3;updateHUD();roomId='corr';player.x=320;player.y=310;player.dir='up';
   ghost.on=false;ghost.timer=Infinity;fade=1;roomT=3;sfx.door();

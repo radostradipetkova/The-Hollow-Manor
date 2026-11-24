@@ -30,6 +30,7 @@ function switchWorld(){
   if(blocked(player.x,player.y)){player.x=320;player.y=310}
   if(!T.fals){T.fals=1;T.dop=1;notes.forEach(n=>{n.text=n.text.replace('born in 1889','born in 1809').replace('the first step','the second step')});
     say('Something in your journal has changed. And across the hall, someone is copying your every move.',6)}
+  saveGame();
 }
 function beginStage5(){
   chapter=5;T={h:[]};redMode=false;hearts=3;updateHUD();roomId='hallR';player.x=320;player.y=310;player.dir='up';

@@ -66,7 +66,8 @@ function startCycle2(wiped){wiped=wiped===true;
   ['title','over','win'].forEach(i=>$(i).classList.remove('on'));
   if(wiped){JB=notes.length?notes.slice():(JB||[]);try{localStorage.setItem('hmJB',JSON.stringify(JB))}catch(e){}}
   let nn=wiped?[]:notes;try{const d=JSON.parse(localStorage.getItem('hmCP'));if(!wiped&&d&&Array.isArray(d.n)&&!nn.length)nn=d.n}catch(e){}
-  reset();notes=nn;chapter=7;T={wiped,jok:!wiped};saveGame(7,{w:wiped,jb:JB||[]});mode='play';initAudio();roomId='foyer2';player.x=320;player.y=300;player.dir='up';
+  reset();notes=nn;chapter=7;T={wiped,jok:!wiped};mode='play';initAudio();roomId='foyer2';player.x=320;player.y=300;player.dir='up';
   ghost.on=false;ghost.timer=Infinity;fade=1;roomT=3;hearts=3;updateHUD();
   say(wiped?'You are back in the entrance hall. Your journal is gone, and your head feels strangely empty, like a room someone has cleared. Something here must remember for you.':'You are back in the entrance hall. The portraits are still there. The library, the dining room. But something is different.',9);
+  saveGame();
 }
