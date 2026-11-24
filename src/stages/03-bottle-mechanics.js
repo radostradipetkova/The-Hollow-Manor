@@ -1,5 +1,5 @@
 /* ===== Stage 3: carry the bottles to the table and pour them into the beaker (no counters) ===== */
-const BPOS0=[[70,24],[200,24],[500,296]],BLBL=['Acid. Handle with care.','Base. Clear as water.','Reagent. Yellow as old teeth.'];
+const BPOS0=[[70,24],[500,296],[200,24]],BLBL=['Acid. Handle with care.','Base. Clear as water.','Reagent. Yellow as old teeth.'];
 const hexRgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
 function drawHeld(){const c=BOT[T.held].c;rect(ctx,player.x+6,player.y-32,8,6,'#ccc');rect(ctx,player.x+4,player.y-26,12,16,c);ctx.fillStyle='#fff';ctx.font='bold 9px Georgia';ctx.textAlign='center';ctx.fillText('ABC'[T.held],player.x+10,player.y-14)}
 function dropBottle(){
@@ -31,7 +31,7 @@ function drawBeaker(c,o){
 ROOMS.lab.objs=ROOMS.lab.objs.filter(o=>!(typeof o.label==='string'&&/^(Take the (red|glass|yellow) bottle|Mix the reagents)$/.test(o.label)));
 ROOMS.lab.objs.unshift(
   ...[0,1,2].map(i=>({get x(){return (T.bp=T.bp||BPOS0.map(a=>a.slice()))[i][0]},get y(){return (T.bp=T.bp||BPOS0.map(a=>a.slice()))[i][1]},w:16,h:30,
-    get vis(){return (T.pk||[])[i]?undefined:(i===1?'red':undefined)},when:()=>T.held!==i,label:()=>'Pick up bottle '+'ABC'[i],
+    get vis(){return i===2?'red':undefined},when:()=>T.held!==i,label:()=>'Pick up bottle '+'ABC'[i],
     draw:(c,o)=>{rect(c,o.x+4,o.y,8,8,'#ccc');rect(c,o.x,o.y+8,16,22,BOT[i].c);c.fillStyle='#fff';c.font='bold 11px Georgia';c.textAlign='center';c.fillText('ABC'[i],o.x+8,o.y+24)},
     act:()=>pickBottle(i)})),
   {x:410,y:176,w:36,h:40,solid:true,label:'Empty the beaker',draw:(c,o)=>{rect(c,o.x,o.y+10,o.w,30,'#4a5256');rect(c,o.x+6,o.y+16,o.w-12,16,'#10181a')},act:()=>{if(T.ink){say('The beaker is not to be emptied. The mixture is working.',3);return}if(!(T.mix||[]).length){say('The beaker is already empty.',2);return}T.mix=[];sfx.light();say('You tip the beaker into the sink. It is empty again.',3)}},
